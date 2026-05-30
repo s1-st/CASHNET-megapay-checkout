@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STK Push Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #message {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Make Payment</h2>
+
+    <input
+        type="tel"
+        id="phone"
+        placeholder="2547XXXXXXXX"
+        pattern="2547[0-9]{8}"
+        required
+    >
+
+    <input
+        type="number"
+        id="amount"
+        placeholder="Amount"
+        min="1"
+        required
+    >
+
+    <button onclick="payNow()">Pay Now</button>
+
+    <div id="message"></div>
+
+    <script>
+        async function payNow() {
+            const phone = document.getElementById("phone").value.trim();
+            const amount = document.getElementById("amount").value;
+            const message = document.getElementById("message");
+
+            if (!/^2547\d{8}$/.test(phone)) {
+                message.innerText = "Enter a valid phone number (2547XXXXXXXX)";
+                return;
+            }
+
+            try {
+                const response = await fetch("/stkpush", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        phone,
+                        amount
+                    })
+                });
+
+                const data = await response.json();
+
+                message.innerText =
+                    data.message || "STK Push request sent successfully.";
+            } catch (error) {
+                message.innerText = "Failed to send STK Push request.";
+                console.error(error);
+            }
+        }
+    </script>
+
+</body>
+</html>
