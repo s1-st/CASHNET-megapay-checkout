@@ -1,0 +1,51 @@
+export default {
+  async fetch(request, env) {
+    if (request.method !== "POST") {
+      return new Response("Method not allowed", { status: 405 });
+    }
+
+    try {
+      const { phone, amount } = await request.json();
+
+      if (!phone || !amount) {
+        return Response.json({ message: "Missing phone or amount" }, { status: 400 });
+      }
+
+      // 🔑 MegaPay credentials (store in Cloudflare env vars ideally)
+      const API_URL = "https://api.megapay.example.com/stkpush"; // <-- replace with real MegaPay endpoint
+      const API_KEY = env.MEGAPAY_API_KEY;
+      const API_SECRET = env.MEGAPAY_API_SECRET;
+
+      // Build request payload (adjust to MegaPay spec if needed)
+      const payload = {
+        phone: phone,
+        amount: amount,
+        reference: "ORDER_" + Date.now(),
+        callback_url: "https://your-worker-domain.com/callback"
+      };
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_KEY}`,
+          "X-API-SECRET": API_SECRET
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      return Response.json({
+        message: "STK Push initiated",
+        data
+      });
+
+    } catch (err) {
+      return Response.json({
+        message: "Error initiating STK Push",
+        error: err.message
+      }, { status: 500 });
+    }
+  }
+};
